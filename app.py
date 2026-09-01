@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
 # --- Page Config ---
 st.set_page_config(
@@ -8,11 +8,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- GEMINI API SETUP ---
+# --- GEMINI API SETUP (New Google GenAI SDK) ---
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-pro')
+    client = genai.Client(api_key=api_key)
     api_working = True
 except Exception as e:
     api_working = False
@@ -124,8 +123,11 @@ with tab2:
             if api_working:
                 with st.spinner("جاري التفكير والإجابة..."):
                     try:
-                        system_prompt = "أنت مساعد ذكي ومتخصص في مجالات الطباعة والتصميم لمطبعة PRINT FLASH. أجب باللغة العربية بأسلوب احترافي ومختصر."
-                        response = model.generate_content(f"{system_prompt}\n\nالسؤال: {user_prompt}")
+                        system_instruction = "أنت مساعد ذكي ومتخصص في مجالات الطباعة والتصميم لمطبعة PRINT FLASH. أجب باللغة العربية بأسلوب احترافي ومختصر."
+                        response = client.models.generate_content(
+                            model='gemini-2.5-flash',
+                            contents=f"{system_instruction}\n\nالسؤال: {user_prompt}"
+                        )
                         st.markdown("### الإجابة:")
                         st.write(response.text)
                     except Exception as err:

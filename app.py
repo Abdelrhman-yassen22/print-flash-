@@ -12,7 +12,7 @@ st.set_page_config(
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
     api_working = True
 except Exception as e:
     api_working = False
@@ -97,7 +97,7 @@ with tab1:
     unit_price = base_rates.get(product, 2.0)
     
     raw_total = unit_price * quantity
-    discounted_total = raw_total * 0.70  # 30% Flash Offer
+    discounted_total = raw_total * 0.70
     
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)

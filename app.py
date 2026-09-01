@@ -1,5 +1,5 @@
 import streamlit as st
-import os
+import google.generativeai as genai
 
 # --- Page Config ---
 st.set_page_config(
@@ -8,16 +8,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Styling (Fixed Contrast & Light Theme Forced) ---
+# --- GEMINI API SETUP ---
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    api_working = True
+except Exception as e:
+    api_working = False
+
+# --- CSS Styling ---
 st.markdown("""
 <style>
-    /* Force background & default text color */
     .stApp {
         background-color: #FDFBF7;
         color: #222222;
     }
-    
-    /* Header Banner */
     .hero-banner {
         background: linear-gradient(135deg, #FF4B4B 0%, #FF8C42 50%, #FFC107 100%);
         padding: 30px;
@@ -29,20 +35,17 @@ st.markdown("""
     .hero-banner h1 { color: white !important; font-weight: 800; }
     .hero-banner p { color: #FFF3E0 !important; font-size: 1.1rem; }
     
-    /* Form Labels & Text Visibility Fix */
     label, .stMarkdown, p, span, h1, h2, h3, h4, h5, h6 {
         color: #2D3748 !important;
     }
     
-    /* Input Fields Styling */
-    .stSelectbox div[data-baseweb="select"], .stNumberInput input {
+    .stSelectbox div[data-baseweb="select"], .stNumberInput input, .stTextInput input {
         background-color: #FFFFFF !important;
         color: #1A202C !important;
         border: 1px solid #CBD5E0 !important;
         border-radius: 8px !important;
     }
 
-    /* Price Box Styling */
     .price-card {
         background: #FFFFFF;
         border: 2px solid #FF6B6B;
@@ -83,15 +86,14 @@ with tab1:
     col1, col2 = st.columns([1.2, 1])
     
     with col1:
-        product = st.selectbox("Choose a product", ["Stickers", "Business Cards", "Flyers / Leaflets", "Banners"])
+        product = st.selectbox("Choose a product", ["Stickers", "Business Cards", "Flyers / Leaflets", "Banners", "Block Note", "Books"])
         quantity = st.number_input("Quantity", min_value=10, value=100, step=10)
         size = st.selectbox("Size", ["Standard (A4/Business)", "Custom", "Large Format"])
         paper_weight = st.selectbox("Paper Weight (GSM)", ["150 GSM Standard", "300 GSM Heavy", "350 GSM Premium"])
         sides = st.radio("Sides", ["Single-sided", "Double-sided"])
         lamination = st.selectbox("Lamination", ["None", "Matte", "Glossy", "Soft-touch"])
 
-    # Base Pricing Calculation logic
-    base_rates = {"Stickers": 2.5, "Business Cards": 1.5, "Flyers / Leaflets": 3.0, "Banners": 15.0}
+    base_rates = {"Stickers": 2.5, "Business Cards": 1.5, "Flyers / Leaflets": 3.0, "Banners": 15.0, "Block Note": 12.0, "Books": 25.0}
     unit_price = base_rates.get(product, 2.0)
     
     raw_total = unit_price * quantity
@@ -119,7 +121,17 @@ with tab2:
     user_prompt = st.text_input("Ask a question about your print job:")
     if st.button("Ask AI Assistant"):
         if user_prompt:
-            st.info("AI Consultant is available once the Gemini API key is active.")
+            if api_working:
+                with st.spinner("جاري التفكير والإجابة..."):
+                    try:
+                        system_prompt = "أنت مساعد ذكي ومتخصص في مجالات الطباعة والتصميم لمطبعة PRINT FLASH. أجب باللغة العربية بأسلوب احترافي ومختصر."
+                        response = model.generate_content(f"{system_prompt}\n\nالسؤال: {user_prompt}")
+                        st.markdown("### الإجابة:")
+                        st.write(response.text)
+                    except Exception as err:
+                        st.error(f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {err}")
+            else:
+                st.error("لم يتم العثور على مفتاح API بشكل صحيح في Secrets.")
         else:
             st.warning("Please enter a question first.")
 

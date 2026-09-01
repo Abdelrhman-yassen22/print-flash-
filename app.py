@@ -125,7 +125,7 @@ with tab2:
                     try:
                         system_instruction = "أنت مساعد ذكي ومتخصص في مجالات الطباعة والتصميم لمطبعة PRINT FLASH. أجب باللغة العربية بأسلوب احترافي ومختصر."
                         response = client.models.generate_content(
-                            model='gemini-2.5-flash',
+                            model='gemini-3.6-flash',
                             contents=f"{system_instruction}\n\nالسؤال: {user_prompt}"
                         )
                         st.markdown("### الإجابة:")
